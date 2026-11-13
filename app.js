@@ -418,6 +418,7 @@ function renderSecret(){
     el('p','Bekijk hieronder het verlanglijstje. Dit blijft via je persoonlijke link bereikbaar.')
   );
   target.classList.remove('hidden');
+  renderWishlists();
 }
 function canReserve(p){
   return !!myMember&&(p.kind||mySecret?.recipientId===p.id);
