@@ -1,8 +1,154 @@
-<!doctype html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f8f5ef"><title>Lootjes — een beetje magie</title><style>
-:root{--bg:#f8f5ef;--ink:#34483e;--muted:#78877b;--line:#e2e5dc;--pink:#f7e8e4}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,Arial,sans-serif}main{max-width:760px;margin:auto;padding:30px 17px 80px}header{text-align:center;margin:12px 0 32px}h1,h2,h3{font-family:Georgia,serif;font-weight:400}h1{font-size:clamp(42px,10vw,64px);margin:0}h2{font-size:30px;margin:0 0 12px}h3{font-size:22px;margin:0 0 10px}.muted,.hint{color:var(--muted)}.hint{font-size:13px}.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:23px;margin:16px 0;box-shadow:0 8px 25px #34483e09}label{display:block;font-size:13px;font-weight:650;margin:14px 0 6px}input,textarea,select{width:100%;padding:12px 13px;border:1px solid #d7ddd3;border-radius:11px;font:inherit;color:var(--ink);background:#fdfdfa}textarea{min-height:82px}button{border:0;border-radius:12px;padding:12px 16px;background:var(--ink);color:white;font:600 14px system-ui;cursor:pointer}button.secondary{background:#edf1eb;color:var(--ink)}button.warn{background:var(--pink);color:#945f56}button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.row button{flex:0 0 auto}.stack{display:grid;gap:10px}.item{padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.pill{display:inline-block;border-radius:100px;padding:3px 10px;background:#edf1eb;font-size:12px}.hidden{display:none!important}.alert{background:#fff1eb;border-radius:12px;padding:12px;margin:12px 0}.ok{background:#edf5ed;border-radius:12px;padding:12px;margin:12px 0}.wish{display:flex;gap:10px;align-items:center;justify-content:space-between}.wish button{flex-shrink:0}.wide{width:100%}a{color:var(--ink)}.linkbox{overflow-wrap:anywhere;background:#f4f5f0;padding:10px;border-radius:9px;font-size:12px}.smallbtn{padding:8px 11px}#status{position:sticky;top:0;z-index:3;text-align:center;background:#f0f3ed;padding:8px;font-size:13px}.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:500px){.split{grid-template-columns:1fr}.card{padding:18px}} </style></head><body>
-<div id="status">Lootjes wordt geladen…</div><main><header><h1>✉️ Lootjes</h1><div class="muted">Een beetje magie, een mooi cadeau.</div></header>
-<section id="home" class="card hidden"><h2>Welkom bij Lootjes</h2><p>Open je persoonlijke link om mee te doen, of log in als organisator.</p><button id="showLogin">Organisator inloggen</button></section>
-<section id="login" class="card hidden"><h2>Organisator</h2><label>E-mailadres</label><input id="email" type="email" autocomplete="username"><label>Wachtwoord</label><input id="password" type="password" autocomplete="current-password"><p><button id="loginBtn">Inloggen</button> <button class="secondary" id="backHome">Terug</button></p></section>
-<section id="admin" class="hidden"><div class="row"><h2>Mijn trekkingen</h2><button class="secondary" id="logout">Uitloggen</button></div><div id="events" class="stack"></div><section class="card"><h2>Nieuwe trekking</h2><label>Naam</label><input id="eventName" placeholder="Kerst 2026"><div class="split"><div><label>Datum</label><input id="eventDate" type="date"></div><div><label>Budget (€)</label><input id="eventBudget" type="number" min="0" step="0.01"></div></div><label>Extra informatie</label><textarea id="eventInfo"></textarea><label>Deelnemers (één naam per regel)</label><textarea id="adultNames" placeholder="Dominique&#10;Richard&#10;Stan"></textarea><label>Kinderen / alleen verlanglijstje (één per regel)</label><textarea id="childNames" placeholder="Jessy&#10;Elena"></textarea><p class="hint">Voor iedereen wordt een persoonlijke link gemaakt. Kinderen trekken geen lootje.</p><button id="createEvent" class="wide">Trekking aanmaken</button></section><section id="manage" class="card hidden"><h2 id="manageTitle"></h2><div id="manageDetails"></div><h3>Uitsluitingen</h3><p class="hint">Vink aan wie een ander niet mag trekken. Dit werkt per richting.</p><div id="exclusions"></div><button id="saveExclusions" class="secondary wide">Uitsluitingen opslaan</button><div class="alert"><strong>Definitieve trekking</strong><p>Controleer eerst alle deelnemers en uitsluitingen. Na bevestiging kunnen de resultaten niet meer worden gewijzigd.</p><button id="drawBtn" class="wide">Trekking definitief uitvoeren</button></div><h3>Persoonlijke links</h3><div id="links"></div><p class="hint">Deel elke link alleen met de betreffende persoon. Voor een kind kun je de link aan de verzorger sturen.</p></section></section>
-<section id="participant" class="hidden"><div id="eventIntro" class="card"></div><section class="card"><h2>Mijn verlanglijstje</h2><p class="hint">Vul minimaal drie wensen in om jouw geheime lootje te openen. Je kunt later wensen toevoegen of wijzigen.</p><div id="myWishes"></div><div class="row"><input id="newWish" placeholder="Bijv. een mooi boek"><button id="addWish">Toevoegen</button></div></section><section id="revealCard" class="card"><h2>✉️ Jouw lootje</h2><p id="revealText"></p><button id="revealBtn" class="wide">Open mijn lootje</button><div id="revealed" class="hidden"></div></section><section class="card"><h2>Alle verlanglijstjes</h2><div id="allWishlists"></div></section><p class="hint">🔒 Dit is jouw persoonlijke link. Deel hem niet: wie deze link heeft, kan jouw Lootjes-pagina openen.</p></section>
-</main><script type="module" src="./app.js"></script></body></html>
+
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f8f5ef">
+<title>Lootjes — een beetje magie</title>
+<style>
+:root{--bg:#f8f5ef;--ink:#34483e;--muted:#78877b;--line:#e2e5dc;--pink:#f7e8e4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,Arial,sans-serif}
+main{max-width:760px;margin:auto;padding:30px 17px 80px}
+header{text-align:center;margin:12px 0 32px}
+h1,h2,h3{font-family:Georgia,serif;font-weight:400}
+h1{font-size:clamp(42px,10vw,64px);margin:0}
+h2{font-size:30px;margin:0 0 12px}
+h3{font-size:22px;margin:0 0 10px}
+.muted,.hint{color:var(--muted)}
+.hint{font-size:13px}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:23px;margin:16px 0;box-shadow:0 8px 25px #34483e09}
+label{display:block;font-size:13px;font-weight:650;margin:14px 0 6px}
+input,textarea,select{width:100%;padding:12px 13px;border:1px solid #d7ddd3;border-radius:11px;font:inherit;color:var(--ink);background:#fdfdfa}
+textarea{min-height:82px}
+button{border:0;border-radius:12px;padding:12px 16px;background:var(--ink);color:white;font:600 14px system-ui;cursor:pointer}
+button.secondary{background:#edf1eb;color:var(--ink)}
+button.warn{background:var(--pink);color:#945f56}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.row button{flex:0 0 auto}
+.stack{display:grid;gap:10px}
+.item{padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.pill{display:inline-block;border-radius:100px;padding:3px 10px;background:#edf1eb;font-size:12px}
+.hidden{display:none!important}
+.alert{background:#fff1eb;border-radius:12px;padding:12px;margin:12px 0}
+.ok{background:#edf5ed;border-radius:12px;padding:12px;margin:12px 0}
+.wish{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.wish button{flex-shrink:0}
+.wide{width:100%}
+a{color:var(--ink)}
+.linkbox{overflow-wrap:anywhere;background:#f4f5f0;padding:10px;border-radius:9px;font-size:12px}
+.smallbtn{padding:8px 11px}
+#status{position:sticky;top:0;z-index:3;text-align:center;background:#f0f3ed;padding:8px;font-size:13px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:500px){
+.split{grid-template-columns:1fr}
+.card{padding:18px}
+}
+</style>
+</head>
+<body>
+<div id="status">Lootjes wordt geladen…</div>
+<main>
+<header>
+<h1>✉️ Lootjes</h1>
+<div class="muted">Een beetje magie, een mooi cadeau.</div>
+</header>
+
+<section id="home" class="card hidden">
+<h2>Welkom bij Lootjes</h2>
+<p>Open je persoonlijke link om mee te doen, of log in als organisator.</p>
+<button id="showLogin">Organisator inloggen</button>
+</section>
+
+<section id="login" class="card hidden">
+<h2>Organisator</h2>
+<label>E-mailadres</label>
+<input id="email" type="email" autocomplete="username">
+<label>Wachtwoord</label>
+<input id="password" type="password" autocomplete="current-password">
+<p>
+<button id="loginBtn">Inloggen</button>
+<button class="secondary" id="backHome">Terug</button>
+</p>
+</section>
+
+<section id="admin" class="hidden">
+<div class="row">
+<h2>Mijn trekkingen</h2>
+<button class="secondary" id="logout">Uitloggen</button>
+</div>
+<div id="events" class="stack"></div>
+<section class="card">
+<h2>Nieuwe trekking</h2>
+<label>Naam</label>
+<input id="eventName" placeholder="Kerst 2026">
+<div class="split">
+<div>
+<label>Datum</label>
+<input id="eventDate" type="date">
+</div>
+<div>
+<label>Budget (€)</label>
+<input id="eventBudget" type="number" min="0" step="0.01">
+</div>
+</div>
+<label>Extra informatie</label>
+<textarea id="eventInfo"></textarea>
+<label>Deelnemers (één naam per regel)</label>
+<textarea id="adultNames" placeholder="Eén deelnemer per regel"></textarea>
+<label>Kinderen / alleen verlanglijstje (één per regel)</label>
+<textarea id="childNames" placeholder="Eén kind per regel"></textarea>
+<p class="hint">Voor iedereen wordt een persoonlijke link gemaakt. Kinderen trekken geen lootje.</p>
+<button id="createEvent" class="wide">Trekking aanmaken</button>
+</section>
+
+<section id="manage" class="card hidden">
+<h2 id="manageTitle"></h2>
+<div id="manageDetails"></div>
+<h3>Uitsluitingen</h3>
+<p class="hint">Vink aan wie een ander niet mag trekken. Dit werkt per richting.</p>
+<div id="exclusions"></div>
+<button id="saveExclusions" class="secondary wide">Uitsluitingen opslaan</button>
+<div class="alert">
+<strong>Definitieve trekking</strong>
+<p>Controleer eerst alle deelnemers en uitsluitingen. Na bevestiging kunnen de resultaten niet meer worden gewijzigd.</p>
+<button id="drawBtn" class="wide">Trekking definitief uitvoeren</button>
+</div>
+<h3>Persoonlijke links</h3>
+<div id="links"></div>
+<p class="hint">Deel elke link alleen met de betreffende persoon. Voor een kind kun je de link aan de verzorger sturen.</p>
+</section>
+</section>
+
+<section id="participant" class="hidden">
+<div id="eventIntro" class="card"></div>
+<section class="card">
+<h2>Mijn verlanglijstje</h2>
+<p class="hint">Vul minimaal drie wensen in om jouw geheime lootje te openen. Je kunt later wensen toevoegen of wijzigen.</p>
+<div id="myWishes"></div>
+<label for="newWish">Cadeauomschrijving (verplicht)</label>
+<input id="newWish" maxlength="160" placeholder="Bijv. Boek: De zeven zussen">
+<label for="newWishUrl">Productlink (optioneel)</label>
+<input id="newWishUrl" type="url" placeholder="https://www.voorbeeld.nl/cadeau">
+<p><button id="addWish" class="wide">Wens toevoegen</button></p>
+</section>
+<section id="revealCard" class="card">
+<h2>✉️ Jouw lootje</h2>
+<p id="revealText"></p>
+<button id="revealBtn" class="wide">Open mijn lootje</button>
+<div id="revealed" class="hidden"></div>
+</section>
+<section class="card">
+<h2>Alle verlanglijstjes</h2>
+<div id="allWishlists"></div>
+</section>
+<p class="hint">🔒 Dit is jouw persoonlijke link. Deel hem niet: wie deze link heeft, kan jouw Lootjes-pagina openen.</p>
+</section>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
