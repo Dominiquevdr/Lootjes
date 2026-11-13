@@ -1,13 +1,25 @@
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
 import {
-  getAuth, onAuthStateChanged, signInAnonymously,
-  signInWithEmailAndPassword, signOut
+  getAuth,
+  onAuthStateChanged,
+  signInAnonymously,
+  signInWithEmailAndPassword,
+  signOut
 } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 import {
-  getFirestore, doc, collection, getDoc, getDocs,
-  setDoc, updateDoc, writeBatch, runTransaction,
-  query, where, serverTimestamp
+  getFirestore,
+  doc,
+  collection,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  writeBatch,
+  runTransaction,
+  query,
+  where,
+  serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 
 const firebaseConfig = {
@@ -20,6 +32,7 @@ const firebaseConfig = {
 };
 
 const ADMIN_UID = 'syp8cPy6njSgtsqLxNSX4nIL5I13';
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -37,41 +50,130 @@ let mySecret = null;
 let selectedEvent = null;
 let exclusionSet = new Set();
 let reservations = [];
+let refreshing = false;
 
 const el = (tag, txt, cls) => {
-  const e = document.createElement(tag);
-  if (txt !== undefined) e.textContent = txt;
-  if (cls) e.className = cls;
-  return e;
+  const node = document.createElement(tag);
+  if (txt !== undefined) node.textContent = txt;
+  if (cls) node.className = cls;
+  return node;
 };
 
-const show = id => {
-  for (const x of ['home', 'login', 'admin', 'participant']) {
-    $(x).classList.toggle('hidden', x !== id);
+function show(id) {
+  for (const name of ['home', 'login', 'admin', 'participant']) {
+    $(name).classList.toggle('hidden', name !== id);
   }
-};
+}
 
-const status = msg => { $('status').textContent = msg; };
-const fail = e => {
-  console.error(e);
-  status('Fout: ' + (e?.message || String(e)));
-};
+function status(message) {
+  $('status').textContent = message;
+}
 
-const rid = () => Array.from(
-  crypto.getRandomValues(new Uint8Array(24)),
-  b => b.toString(16).padStart(2, '0')
-).join('');
+function fail(error) {
+  console.error(error);
+  status('Fout: ' + (error?.message || String(error)));
+}
 
-const names = s => [...new Set(
-  s.split('\n').map(x => x.trim()).filter(Boolean)
-)];
+function rid() {
+  return Array.from(
+    crypto.getRandomValues(new Uint8Array(24)),
+    b => b.toString(16).padStart(2, '0')
+  ).join('');
+}
 
-const eventRef = id => doc(db, 'trekkingen', id);
-const personRef = (id, p) => doc(db, 'trekkingen', id, 'personen', p);
-const memberRef = (id, uid) => doc(db, 'trekkingen', id, 'leden', uid);
-const keyRef = (id, t) => doc(db, 'trekkingen', id, 'sleutels', t);
-const secretRef = (id, t) => doc(db, 'trekkingen', id, 'geheimen', t);
-const reservationRef = (id, w) => doc(db, 'trekkingen', id, 'reserveringen', w);
+function names(value) {
+  return [...new Set(
+    value.split('\n').map(x => x.trim()).filter(Boolean)
+  )];
+}
+
+function sortedPeople(list) {
+  return list.sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+}
+
+const eventRef = id =>
+  doc(db, 'trekkingen', id);
+
+const personRef = (id, personId) =>
+  doc(db, 'trekkingen', id, 'personen', personId);
+
+const memberRef = (id, uid) =>
+  doc(db, 'trekkingen', id, 'leden', uid);
+
+const keyRef = (id, key) =>
+  doc(db, 'trekkingen', id, 'sleutels', key);
+
+const secretRef = (id, key) =>
+  doc(db, 'trekkingen', id, 'geheimen', key);
+
+const reservationRef = (id, wishId) =>
+  doc(db, 'trekkingen', id, 'reserveringen', wishId);
+
+function formatDate(value) {
+  if (!value) return 'Datum volgt';
+
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return String(value);
+
+  return `${match[3]}-${match[2]}-${match[1]}`;
+}
+
+function formatBudget(value) {
+  return new Intl.NumberFormat('nl-NL', {
+    style: 'currency',
+    currency: 'EUR'
+  }).format(Number(value) || 0);
+}
+
+function formatTime(value) {
+  if (!value) return '';
+  return String(value).replace(':', '.') + ' uur';
+}
+
+function cleanLink(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+
+  let url;
+
+  try {
+    url = new URL(raw);
+  } catch {
+    throw Error('Gebruik een volledige productlink, beginnend met https://');
+  }
+
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw Error('Alleen http- en https-links zijn toegestaan.');
+  }
+
+  url.hash = '';
+  return url.href;
+}
+
+function wishContent(wish) {
+  const wrap = el('div');
+  wrap.className = 'wish-content';
+
+  wrap.append(el('strong', wish.text || ''));
+
+  if (wish.url) {
+    try {
+      const safeUrl = cleanLink(wish.url);
+
+      if (safeUrl) {
+        const link = el('a', 'Bekijk cadeau');
+        link.href = safeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        wrap.append(link);
+      }
+    } catch {
+      // Een oude ongeldige link wordt niet klikbaar gemaakt.
+    }
+  }
+
+  return wrap;
+}
 
 function loginSetup() {
   $('showLogin').onclick = () => show('login');
@@ -80,11 +182,17 @@ function loginSetup() {
   $('loginBtn').onclick = async () => {
     try {
       status('Inloggen…');
+
       await signInWithEmailAndPassword(
-        auth, $('email').value.trim(), $('password').value
+        auth,
+        $('email').value.trim(),
+        $('password').value
       );
+
       await startAdmin();
-    } catch (e) { fail(e); }
+    } catch (error) {
+      fail(error);
+    }
   };
 
   $('logout').onclick = async () => {
@@ -93,6 +201,7 @@ function loginSetup() {
   };
 
   $('createEvent').onclick = createEvent;
+  $('saveEventDetails').onclick = saveEventDetails;
   $('saveExclusions').onclick = saveExclusions;
   $('drawBtn').onclick = draw;
 }
@@ -103,6 +212,7 @@ async function startAdmin() {
     status('Alleen de organisator kan hier inloggen.');
     return;
   }
+
   show('admin');
   status('Beheerdersomgeving');
   await loadEvents();
@@ -112,23 +222,26 @@ async function loadEvents() {
   const target = $('events');
   target.replaceChildren();
 
-  const snap = await getDocs(query(
+  const snapshot = await getDocs(query(
     collection(db, 'trekkingen'),
     where('owner', '==', ADMIN_UID)
   ));
 
-  if (snap.empty) {
+  if (snapshot.empty) {
     target.append(el('p', 'Nog geen trekkingen.', 'muted'));
   }
 
-  snap.forEach(d => {
-    const b = el(
+  snapshot.forEach(item => {
+    const data = item.data();
+
+    const button = el(
       'button',
-      `${d.data().naam} · ${d.data().status === 'definitief' ? 'Definitief' : 'Concept'}`,
+      `${data.naam} · ${data.status === 'definitief' ? 'Definitief' : 'Concept'}`,
       'secondary'
     );
-    b.onclick = () => manageEvent(d.id);
-    target.append(b);
+
+    button.onclick = () => manageEvent(item.id);
+    target.append(button);
   });
 }
 
@@ -136,23 +249,34 @@ async function createEvent() {
   try {
     const adults = names($('adultNames').value);
     const children = names($('childNames').value);
+    const eventName = $('eventName').value.trim();
 
-    if (!$('eventName').value.trim() || adults.length < 2)
+    if (!eventName || adults.length < 2) {
       throw Error('Vul een naam en minimaal twee deelnemers in.');
+    }
 
-    if (new Set([...adults, ...children].map(x => x.toLowerCase())).size !== adults.length + children.length)
+    const allNames = [...adults, ...children];
+
+    if (
+      new Set(allNames.map(x => x.toLocaleLowerCase('nl'))).size
+      !== allNames.length
+    ) {
       throw Error('Namen moeten uniek zijn.');
+    }
 
-    if (adults.length + children.length > 70)
+    if (allNames.length > 70) {
       throw Error('Maximaal 70 personen per trekking.');
+    }
 
     const id = rid();
     const batch = writeBatch(db);
 
     batch.set(eventRef(id), {
       owner: ADMIN_UID,
-      naam: $('eventName').value.trim(),
+      naam: eventName,
       datum: $('eventDate').value,
+      tijd: $('eventTime').value,
+      locatie: $('eventLocation').value.trim(),
       bedrag: Number($('eventBudget').value) || 0,
       info: $('eventInfo').value.trim(),
       status: 'concept',
@@ -164,13 +288,19 @@ async function createEvent() {
       ...children.map(naam => ({ naam, kind: true }))
     ];
 
-    for (const p of entries) {
-      const pid = rid(), key = rid();
-      batch.set(personRef(id, pid), {
-        naam: p.naam, kind: p.kind, wishes: []
+    for (const person of entries) {
+      const personId = rid();
+      const personalKey = rid();
+
+      batch.set(personRef(id, personId), {
+        naam: person.naam,
+        kind: person.kind,
+        wishes: []
       });
-      batch.set(keyRef(id, key), {
-        participantId: pid, eventId: id
+
+      batch.set(keyRef(id, personalKey), {
+        participantId: personId,
+        eventId: id
       });
     }
 
@@ -180,86 +310,152 @@ async function createEvent() {
     );
 
     await batch.commit();
+
     status('Trekking aangemaakt.');
     await loadEvents();
     await manageEvent(id);
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
 async function manageEvent(id) {
   try {
     selectedEvent = id;
-    const e = await getDoc(eventRef(id));
-    if (!e.exists()) throw Error('Trekking niet gevonden');
 
-    activeEvent = e.data();
+    const eventSnapshot = await getDoc(eventRef(id));
 
-    const ps = await getDocs(collection(db, 'trekkingen', id, 'personen'));
-    people = ps.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+    if (!eventSnapshot.exists()) {
+      throw Error('Trekking niet gevonden.');
+    }
 
-    const cfg = await getDoc(doc(db, 'trekkingen', id, 'instellingen', 'config'));
+    activeEvent = eventSnapshot.data();
+
+    const peopleSnapshot = await getDocs(
+      collection(db, 'trekkingen', id, 'personen')
+    );
+
+    people = sortedPeople(
+      peopleSnapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }))
+    );
+
+    const configSnapshot = await getDoc(
+      doc(db, 'trekkingen', id, 'instellingen', 'config')
+    );
+
     exclusionSet = new Set(
-      (cfg.data()?.exclusions || []).map(x => x.from + '|' + x.to)
+      (configSnapshot.data()?.exclusions || [])
+        .map(x => x.from + '|' + x.to)
     );
 
     $('manage').classList.remove('hidden');
+
     $('manageTitle').textContent = activeEvent.naam;
-    $('manageDetails').textContent =
-      `${formatDate(activeEvent.datum)} · € ${activeEvent.bedrag} · ${activeEvent.status}`;
 
-    const ex = $('exclusions');
-    ex.replaceChildren();
+    $('manageDetails').textContent = [
+      formatDate(activeEvent.datum),
+      activeEvent.tijd ? formatTime(activeEvent.tijd) : '',
+      activeEvent.locatie || '',
+      formatBudget(activeEvent.bedrag),
+      activeEvent.status
+    ].filter(Boolean).join(' · ');
 
-    const adults = people.filter(x => !x.kind);
+    $('editEventName').value = activeEvent.naam || '';
+    $('editEventDate').value = activeEvent.datum || '';
+    $('editEventTime').value = activeEvent.tijd || '';
+    $('editEventLocation').value = activeEvent.locatie || '';
+    $('editEventBudget').value = activeEvent.bedrag ?? 0;
+    $('editEventInfo').value = activeEvent.info || '';
 
-    for (const a of adults) {
+    const exclusions = $('exclusions');
+    exclusions.replaceChildren();
+
+    const adults = people.filter(p => !p.kind);
+
+    for (const person of adults) {
       const group = el('div', undefined, 'item');
-      group.append(el('strong', a.naam + ' mag niet trekken:'));
 
-      for (const b of adults.filter(x => x.id !== a.id)) {
-        const line = el('label');
-        const check = el('input');
-        check.type = 'checkbox';
-        check.style.width = 'auto';
-        check.checked = exclusionSet.has(a.id + '|' + b.id);
-        check.disabled = activeEvent.status === 'definitief';
+      group.append(
+        el('strong', person.naam + ' mag niet trekken:')
+      );
 
-        check.onchange = () => {
-          const k = a.id + '|' + b.id;
-          check.checked ? exclusionSet.add(k) : exclusionSet.delete(k);
+      for (const other of adults.filter(p => p.id !== person.id)) {
+        const label = el('label');
+        const checkbox = el('input');
+
+        checkbox.type = 'checkbox';
+        checkbox.style.width = 'auto';
+
+        const key = person.id + '|' + other.id;
+
+        checkbox.checked = exclusionSet.has(key);
+        checkbox.disabled = activeEvent.status === 'definitief';
+
+        checkbox.onchange = () => {
+          if (checkbox.checked) {
+            exclusionSet.add(key);
+          } else {
+            exclusionSet.delete(key);
+          }
         };
 
-        line.append(check, document.createTextNode(' ' + b.naam));
-        group.append(line);
+        label.append(
+          checkbox,
+          document.createTextNode(' ' + other.naam)
+        );
+
+        group.append(label);
       }
-      ex.append(group);
+
+      exclusions.append(group);
     }
 
-    $('saveExclusions').disabled = activeEvent.status === 'definitief';
-    $('drawBtn').disabled = activeEvent.status === 'definitief';
+    $('saveExclusions').disabled =
+      activeEvent.status === 'definitief';
 
-    const keys = await getDocs(collection(db, 'trekkingen', id, 'sleutels'));
+    $('drawBtn').disabled =
+      activeEvent.status === 'definitief';
+
+    const keys = await getDocs(
+      collection(db, 'trekkingen', id, 'sleutels')
+    );
+
     const links = $('links');
     links.replaceChildren();
 
-    for (const k of keys.docs) {
-      const p = people.find(x => x.id === k.data().participantId);
-      if (!p) continue;
+    for (const key of keys.docs) {
+      const person = people.find(
+        p => p.id === key.data().participantId
+      );
 
-      const url = location.origin + location.pathname +
+      if (!person) continue;
+
+      const url =
+        location.origin + location.pathname +
         '?e=' + encodeURIComponent(id) +
-        '&t=' + encodeURIComponent(k.id);
+        '&t=' + encodeURIComponent(key.id);
 
       const box = el('div', undefined, 'item');
-      box.append(el('strong', p.naam + (p.kind ? ' (kind)' : '')));
+
+      box.append(
+        el('strong', person.naam + (person.kind ? ' (kind)' : ''))
+      );
+
       box.append(el('div', url, 'linkbox'));
 
-      const copy = el('button', 'Kopieer link', 'secondary smallbtn');
+      const copy = el(
+        'button',
+        'Kopieer link',
+        'secondary smallbtn'
+      );
+
       copy.onclick = async () => {
         try {
           await navigator.clipboard.writeText(url);
-          status('Link gekopieerd voor ' + p.naam);
+          status('Link gekopieerd voor ' + person.naam);
         } catch {
           prompt('Kopieer deze link:', url);
         }
@@ -270,16 +466,49 @@ async function manageEvent(id) {
     }
 
     $('manage').scrollIntoView({ behavior: 'smooth' });
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+async function saveEventDetails() {
+  try {
+    if (!selectedEvent) {
+      throw Error('Selecteer eerst een trekking.');
+    }
+
+    const name = $('editEventName').value.trim();
+
+    if (!name) {
+      throw Error('De naam van de viering is verplicht.');
+    }
+
+    await updateDoc(eventRef(selectedEvent), {
+      naam: name,
+      datum: $('editEventDate').value,
+      tijd: $('editEventTime').value,
+      locatie: $('editEventLocation').value.trim(),
+      bedrag: Number($('editEventBudget').value) || 0,
+      info: $('editEventInfo').value.trim()
+    });
+
+    await manageEvent(selectedEvent);
+    await loadEvents();
+
+    status('Vieringsinformatie opgeslagen.');
+  } catch (error) {
+    fail(error);
+  }
 }
 
 async function saveExclusions() {
   try {
-    if (activeEvent.status !== 'concept')
-      throw Error('Trekking is definitief.');
+    if (activeEvent.status !== 'concept') {
+      throw Error('De trekking is definitief.');
+    }
 
-    const exclusions = [...exclusionSet].map(s => {
-      const [from, to] = s.split('|');
+    const exclusions = [...exclusionSet].map(value => {
+      const [from, to] = value.split('|');
       return { from, to };
     });
 
@@ -287,82 +516,93 @@ async function saveExclusions() {
       doc(db, 'trekkingen', selectedEvent, 'instellingen', 'config'),
       { exclusions }
     );
+
     status('Uitsluitingen opgeslagen.');
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
 function findDraw(adults, excluded) {
-  function recurse(i, remaining, output) {
-    if (i === adults.length) return output;
+  function recurse(index, remaining, result) {
+    if (index === adults.length) return result;
 
-    const giver = adults[i];
+    const giver = adults[index];
+
     const options = remaining
-      .filter(p => p.id !== giver.id && !excluded.has(giver.id + '|' + p.id))
-      .sort(() => Math.random() - .5);
+      .filter(person =>
+        person.id !== giver.id &&
+        !excluded.has(giver.id + '|' + person.id)
+      )
+      .sort(() => Math.random() - 0.5);
 
-    for (const p of options) {
-      const result = recurse(
-        i + 1,
-        remaining.filter(x => x.id !== p.id),
-        { ...output, [giver.id]: p.id }
+    for (const receiver of options) {
+      const found = recurse(
+        index + 1,
+        remaining.filter(p => p.id !== receiver.id),
+        { ...result, [giver.id]: receiver.id }
       );
-      if (result) return result;
+
+      if (found) return found;
     }
+
     return null;
   }
+
   return recurse(0, [...adults], {});
 }
 
 async function draw() {
   try {
-    if (activeEvent.status !== 'concept')
+    if (activeEvent.status !== 'concept') {
       throw Error('Deze trekking is al definitief.');
+    }
 
-    const adults = people.filter(x => !x.kind);
-    if (adults.length > 20)
-      throw Error('Meer dan 20 deelnemers: vraag om een uitgebreidere trekkingfunctie.');
+    const adults = people.filter(p => !p.kind);
+
+    if (adults.length > 20) {
+      throw Error('Meer dan 20 deelnemers wordt nog niet ondersteund.');
+    }
 
     const assignment = findDraw(adults, exclusionSet);
-    if (!assignment)
-      throw Error('Deze uitsluitingen maken een geldige trekking onmogelijk.');
 
-    if (!confirm('LET OP: de trekking wordt definitief. Wil je doorgaan?'))
-      return;
+    if (!assignment) {
+      throw Error('Met deze uitsluitingen is geen geldige trekking mogelijk.');
+    }
+
+    if (!confirm(
+      'De trekking wordt definitief. Wil je doorgaan?'
+    )) return;
 
     const keys = await getDocs(
       collection(db, 'trekkingen', selectedEvent, 'sleutels')
     );
+
     const batch = writeBatch(db);
 
-    for (const k of keys.docs) {
-      const pid = k.data().participantId;
-      const person = people.find(x => x.id === pid);
+    for (const key of keys.docs) {
+      const personId = key.data().participantId;
+      const person = people.find(p => p.id === personId);
+
       if (person && !person.kind) {
-        batch.set(secretRef(selectedEvent, k.id), {
-          participantId: pid,
-          recipientId: assignment[pid]
+        batch.set(secretRef(selectedEvent, key.id), {
+          participantId: personId,
+          recipientId: assignment[personId]
         });
       }
     }
 
-    batch.update(eventRef(selectedEvent), { status: 'definitief' });
+    batch.update(eventRef(selectedEvent), {
+      status: 'definitief'
+    });
+
     await batch.commit();
+
     status('Trekking definitief vastgelegd!');
     await manageEvent(selectedEvent);
-  } catch (e) { fail(e); }
-}
-
-function formatDate(value) {
-  if (!value) return 'Datum volgt';
-  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return value;
-  return `${match[3]}-${match[2]}-${match[1]}`;
-}
-
-function formatBudget(value) {
-  return new Intl.NumberFormat('nl-NL', {
-    style: 'currency', currency: 'EUR'
-  }).format(Number(value) || 0);
+  } catch (error) {
+    fail(error);
+  }
 }
 
 function eventInformation() {
@@ -370,18 +610,24 @@ function eventInformation() {
   box.replaceChildren();
 
   box.append(el('h2', `Hoi ${myPerson.naam}!`));
-  box.append(el('p', `Viering - ${activeEvent.naam}`));
+  box.append(el('p', `Viering: ${activeEvent.naam}`));
   box.append(el('p', `Datum: ${formatDate(activeEvent.datum)}`));
 
   if (activeEvent.tijd) {
-    box.append(el('p', `Tijd: ${String(activeEvent.tijd).replace(':', '.')} uur`));
+    box.append(
+      el('p', `Tijd: ${formatTime(activeEvent.tijd)}`)
+    );
   }
 
   if (activeEvent.locatie) {
-    box.append(el('p', `Locatie: ${activeEvent.locatie}`));
+    box.append(
+      el('p', `Locatie: ${activeEvent.locatie}`)
+    );
   }
 
-  box.append(el('p', `Budget: ${formatBudget(activeEvent.bedrag)}`));
+  box.append(
+    el('p', `Budget: ${formatBudget(activeEvent.bedrag)}`)
+  );
 
   if (activeEvent.info) {
     box.append(el('p', activeEvent.info));
@@ -390,27 +636,32 @@ function eventInformation() {
 
 async function startParticipant() {
   try {
-    if (!eventId || !token)
+    if (!eventId || !token) {
       throw Error('Persoonlijke link ontbreekt.');
+    }
 
     status('Persoonlijke link openen…');
 
     const key = await getDoc(keyRef(eventId, token));
-    if (!key.exists() || key.data().eventId !== eventId)
+
+    if (!key.exists() || key.data().eventId !== eventId) {
       throw Error('Ongeldige persoonlijke link.');
+    }
 
-    const ref = memberRef(eventId, auth.currentUser.uid);
-    const old = await getDoc(ref);
+    const uid = auth.currentUser.uid;
+    const ref = memberRef(eventId, uid);
+    const existing = await getDoc(ref);
 
-    if (!old.exists()) {
+    if (!existing.exists()) {
       await setDoc(ref, {
         token,
         participantId: key.data().participantId,
         eventId
       });
-    } else if (old.data().token !== token) {
+    } else if (existing.data().token !== token) {
       throw Error(
-        'Je hebt in deze browser al een andere Lootjes-link geopend. Gebruik een andere browser of privévenster.'
+        'In deze browser is al een andere persoonlijke link geopend. ' +
+        'Gebruik een privévenster of een andere browser.'
       );
     }
 
@@ -419,266 +670,369 @@ async function startParticipant() {
       participantId: key.data().participantId
     };
 
-    const event = await getDoc(eventRef(eventId));
-    if (!event.exists()) throw Error('Trekking bestaat niet.');
-    activeEvent = event.data();
+    const eventSnapshot = await getDoc(eventRef(eventId));
 
-    const snap = await getDocs(collection(db, 'trekkingen', eventId, 'personen'));
-    people = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+    if (!eventSnapshot.exists()) {
+      throw Error('De trekking bestaat niet.');
+    }
 
-    myPerson = people.find(p => p.id === myMember.participantId);
-    if (!myPerson) throw Error('Deelnemer niet gevonden.');
+    activeEvent = eventSnapshot.data();
+
+    const snapshot = await getDocs(
+      collection(db, 'trekkingen', eventId, 'personen')
+    );
+
+    people = sortedPeople(
+      snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }))
+    );
+
+    myPerson = people.find(
+      p => p.id === myMember.participantId
+    );
+
+    if (!myPerson) {
+      throw Error('Deelnemer niet gevonden.');
+    }
 
     show('participant');
     eventInformation();
 
     $('addWish').onclick = addWish;
-    $('newWish').onkeydown = e => {
-      if (e.key === 'Enter') addWish();
-    };
-    $('revealBtn').onclick = reveal;
 
-    // Laad het getrokken lootje direct bij openen van de pagina.
+    $('newWish').onkeydown = event => {
+      if (event.key === 'Enter') addWish();
+    };
+
+    $('revealBtn').onclick = reveal;
+    $('refreshLists').onclick = refreshParticipant;
+
+    // Bestaande, definitieve trekking automatisch herkennen.
     mySecret = null;
-    if (!myPerson.kind && activeEvent.status === 'definitief') {
-      const secretSnap = await getDoc(secretRef(eventId, token));
-      if (secretSnap.exists()) mySecret = secretSnap.data();
+
+    if (
+      !myPerson.kind &&
+      activeEvent.status === 'definitief'
+    ) {
+      const secret = await getDoc(secretRef(eventId, token));
+
+      if (secret.exists()) {
+        mySecret = secret.data();
+      }
     }
 
     await refreshParticipant();
 
-    if (mySecret) {
-      renderSecret();
-      renderWishlists();
-    }
-
     status('Welkom, ' + myPerson.naam + '!');
-  } catch (e) {
-    fail(e);
+  } catch (error) {
+    fail(error);
     show('home');
   }
-}
-
-function cleanLink(value) {
-  const raw = value.trim();
-  if (!raw) return '';
-
-  let u;
-  try { u = new URL(raw); }
-  catch { throw Error('Gebruik een volledige link die begint met https://'); }
-
-  if (!['https:', 'http:'].includes(u.protocol))
-    throw Error('Alleen http- en https-links zijn toegestaan.');
-
-  u.hash = '';
-  return u.href;
-}
-
-function wishContent(w) {
-  const wrap = el('div');
-  wrap.style.minWidth = '0';
-  wrap.style.overflowWrap = 'anywhere';
-  wrap.append(el('strong', w.text));
-
-  if (w.url) {
-    wrap.append(el('br'));
-    const a = el('a', 'Bekijk cadeau');
-    a.href = w.url;
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    wrap.append(a);
-  }
-
-  return wrap;
 }
 
 async function loadReservations() {
   reservations = [];
 
-  // Nooit reserveringen van het eigen verlanglijstje ophalen.
-  const wishes = people
-    .filter(p => p.id !== myPerson.id)
-    .flatMap(p => (p.wishes || []).map(w => ({ p, w })));
+  // Alleen reserveringen van kinderen zijn nog relevant.
+  const childWishes = people
+    .filter(person => person.kind)
+    .flatMap(person =>
+      (person.wishes || []).map(wish => ({
+        person,
+        wish
+      }))
+    );
 
-  const results = await Promise.all(wishes.map(async ({ w }) => {
-    try {
-      const snap = await getDoc(reservationRef(eventId, w.id));
-      return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-    } catch (e) {
-      console.warn('Reservering niet beschikbaar:', e);
-      return null;
-    }
-  }));
+  const results = await Promise.all(
+    childWishes.map(async ({ wish }) => {
+      try {
+        const snapshot = await getDoc(
+          reservationRef(eventId, wish.id)
+        );
+
+        return snapshot.exists()
+          ? { id: snapshot.id, ...snapshot.data() }
+          : null;
+      } catch (error) {
+        console.warn(
+          'Reservering kon niet worden opgehaald:',
+          error
+        );
+        return null;
+      }
+    })
+  );
 
   reservations = results.filter(Boolean);
 }
 
 async function refreshParticipant() {
-  const snap = await getDocs(collection(db, 'trekkingen', eventId, 'personen'));
+  if (refreshing) return;
 
-  people = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-    .sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+  refreshing = true;
 
-  myPerson = people.find(p => p.id === myMember.participantId);
-  if (!myPerson) throw Error('Deelnemer niet gevonden.');
+  try {
+    const eventSnapshot = await getDoc(eventRef(eventId));
+    if (eventSnapshot.exists()) {
+      activeEvent = eventSnapshot.data();
+    }
 
-  await loadReservations();
+    const snapshot = await getDocs(
+      collection(db, 'trekkingen', eventId, 'personen')
+    );
 
-  const mine = $('myWishes');
-  mine.replaceChildren();
+    people = sortedPeople(
+      snapshot.docs.map(item => ({
+        id: item.id,
+        ...item.data()
+      }))
+    );
 
-  for (const w of myPerson.wishes || []) {
-    const line = el('div', undefined, 'wish item');
-    line.append(wishContent(w));
+    myPerson = people.find(
+      person => person.id === myMember.participantId
+    );
 
-    const actions = el('div', undefined, 'row');
-    const edit = el('button', 'Wijzig', 'secondary smallbtn');
-    edit.onclick = () => editWish(w);
+    if (!myPerson) {
+      throw Error('Deelnemer niet gevonden.');
+    }
 
-    const del = el('button', 'Verwijder', 'warn smallbtn');
-    del.onclick = () => removeWish(w.id);
+    eventInformation();
+    await loadReservations();
 
-    actions.append(edit, del);
-    line.append(actions);
-    mine.append(line);
+    const mine = $('myWishes');
+    mine.replaceChildren();
+
+    for (const wish of myPerson.wishes || []) {
+      const line = el('div', undefined, 'wish item');
+      line.append(wishContent(wish));
+
+      const actions = el('div', undefined, 'wish-actions');
+
+      const edit = el(
+        'button', 'Wijzig', 'secondary smallbtn'
+      );
+      edit.onclick = () => editWish(wish);
+
+      const remove = el(
+        'button', 'Verwijder', 'warn smallbtn'
+      );
+      remove.onclick = () => removeWish(wish.id);
+
+      actions.append(edit, remove);
+      line.append(actions);
+      mine.append(line);
+    }
+
+    if (!(myPerson.wishes || []).length) {
+      mine.append(
+        el('p', 'Je hebt nog geen wensen toegevoegd.', 'muted')
+      );
+    }
+
+    const enoughWishes =
+      (myPerson.wishes || []).length >= 3;
+
+    $('revealCard').classList.toggle(
+      'hidden', !!myPerson.kind
+    );
+
+    $('revealBtn').disabled =
+      myPerson.kind ||
+      activeEvent.status !== 'definitief' ||
+      !enoughWishes;
+
+    $('revealText').textContent =
+      activeEvent.status !== 'definitief'
+        ? 'De trekking is nog niet uitgevoerd.'
+        : !enoughWishes
+        ? 'Voeg eerst minimaal drie wensen toe.'
+        : 'Je mag je lootje openen!';
+
+    $('wishHint').textContent = myPerson.kind
+      ? 'Voeg cadeaus toe aan dit verlanglijstje. Je hoeft geen lootje te trekken.'
+      : 'Voeg minimaal drie wensen toe om jouw geheime lootje te openen.';
+
+    if (mySecret && enoughWishes) {
+      renderSecret();
+    } else {
+      $('revealed').classList.add('hidden');
+    }
+
+    renderWishlists();
+  } catch (error) {
+    fail(error);
+  } finally {
+    refreshing = false;
   }
-
-  if (!(myPerson.wishes || []).length)
-    mine.append(el('p', 'Je hebt nog geen wensen toegevoegd.', 'muted'));
-
-  const enoughWishes = (myPerson.wishes || []).length >= 3;
-
-  $('revealBtn').disabled =
-    myPerson.kind ||
-    activeEvent.status !== 'definitief' ||
-    !enoughWishes;
-
-  const msg = myPerson.kind
-    ? 'Dit is een verlanglijstje voor een kind. Je hoeft geen lootje te trekken.'
-    : activeEvent.status !== 'definitief'
-    ? 'De trekking is nog niet uitgevoerd.'
-    : !enoughWishes
-    ? 'Voeg eerst minimaal drie wensen toe.'
-    : 'Je lootje is beschikbaar!';
-
-  $('revealText').textContent = msg;
-
-  if (mySecret) renderSecret();
-
-  // Opnieuw tekenen, inclusief reserveringsknoppen.
-  renderWishlists();
 }
 
 async function addWish() {
   try {
-    const v = $('newWish').value.trim();
+    const description = $('newWish').value.trim();
     const url = cleanLink($('newWishUrl').value);
 
-    if (!v) throw Error('Vul een cadeauomschrijving in.');
-    if (v.length > 160) throw Error('Maximaal 160 tekens per wens.');
+    if (!description) {
+      throw Error('Vul een cadeauomschrijving in.');
+    }
+
+    if (description.length > 160) {
+      throw Error('Maximaal 160 tekens per wens.');
+    }
 
     const list = myPerson.wishes || [];
-    if (list.length >= 30) throw Error('Maximaal 30 wensen.');
 
-    if (list.some(w =>
-      w.text.trim().toLocaleLowerCase('nl') === v.toLocaleLowerCase('nl') ||
-      (url && w.url && cleanLink(w.url) === url)
-    )) throw Error('Dit cadeau of deze link staat al op je lijstje.');
+    if (list.length >= 30) {
+      throw Error('Maximaal 30 wensen.');
+    }
+
+    const duplicate = list.some(wish =>
+      wish.text.trim().toLocaleLowerCase('nl') ===
+        description.toLocaleLowerCase('nl') ||
+      (url && wish.url && cleanLink(wish.url) === url)
+    );
+
+    if (duplicate) {
+      throw Error('Dit cadeau of deze link staat al op het lijstje.');
+    }
 
     await updateDoc(personRef(eventId, myPerson.id), {
-      wishes: [...list, { id: rid(), text: v, url }]
+      wishes: [
+        ...list,
+        { id: rid(), text: description, url }
+      ]
     });
 
     $('newWish').value = '';
     $('newWishUrl').value = '';
+
     await refreshParticipant();
     status('Wens toegevoegd.');
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
-async function editWish(w) {
-  const name = prompt('Cadeauomschrijving:', w.text);
-  if (name === null) return;
+async function editWish(wish) {
+  const description = prompt(
+    'Cadeauomschrijving:', wish.text
+  );
 
-  const urlText = prompt('Productlink (mag leeg blijven):', w.url || '');
+  if (description === null) return;
+
+  const urlText = prompt(
+    'Productlink (mag leeg blijven):', wish.url || ''
+  );
+
   if (urlText === null) return;
 
   try {
-    const textValue = name.trim();
+    const textValue = description.trim();
     const url = cleanLink(urlText);
 
-    if (!textValue || textValue.length > 160)
-      throw Error('Vul een omschrijving van maximaal 160 tekens in.');
+    if (!textValue || textValue.length > 160) {
+      throw Error(
+        'Vul een omschrijving van maximaal 160 tekens in.'
+      );
+    }
 
     const list = myPerson.wishes || [];
 
-    if (list.some(x => x.id !== w.id && (
-      x.text.trim().toLocaleLowerCase('nl') === textValue.toLocaleLowerCase('nl') ||
-      (url && x.url && cleanLink(x.url) === url)
-    ))) throw Error('Dit cadeau of deze link staat al op je lijstje.');
+    const duplicate = list.some(item =>
+      item.id !== wish.id && (
+        item.text.trim().toLocaleLowerCase('nl') ===
+          textValue.toLocaleLowerCase('nl') ||
+        (url && item.url && cleanLink(item.url) === url)
+      )
+    );
+
+    if (duplicate) {
+      throw Error('Dit cadeau of deze link staat al op het lijstje.');
+    }
 
     await updateDoc(personRef(eventId, myPerson.id), {
-      wishes: list.map(x =>
-        x.id === w.id ? { ...x, text: textValue, url } : x
+      wishes: list.map(item =>
+        item.id === wish.id
+          ? { ...item, text: textValue, url }
+          : item
       )
     });
 
     await refreshParticipant();
     status('Wens gewijzigd.');
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
-async function removeWish(id) {
+async function removeWish(wishId) {
   try {
     await updateDoc(personRef(eventId, myPerson.id), {
-      wishes: (myPerson.wishes || []).filter(x => x.id !== id)
+      wishes: (myPerson.wishes || []).filter(
+        wish => wish.id !== wishId
+      )
     });
+
     await refreshParticipant();
     status('Wens verwijderd.');
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
 async function reveal() {
   try {
-    const s = await getDoc(secretRef(eventId, token));
-    if (!s.exists()) throw Error('Je lootje is nog niet beschikbaar.');
+    if ((myPerson.wishes || []).length < 3) {
+      throw Error('Voeg eerst minimaal drie wensen toe.');
+    }
 
-    mySecret = s.data();
+    const snapshot = await getDoc(
+      secretRef(eventId, token)
+    );
+
+    if (!snapshot.exists()) {
+      throw Error('Je lootje is nog niet beschikbaar.');
+    }
+
+    mySecret = snapshot.data();
 
     renderSecret();
-
-    // Belangrijk: na het openen ook alle verlanglijstjes vernieuwen.
     renderWishlists();
 
     status('Je lootje is geopend!');
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 }
 
 function renderSecret() {
   if (!mySecret) return;
 
-  const p = people.find(x => x.id === mySecret.recipientId);
+  const person = people.find(
+    p => p.id === mySecret.recipientId
+  );
+
   const target = $('revealed');
 
   target.replaceChildren(
-    el('h3', `🎁 Jij koopt voor ${p?.naam || 'onbekend'}!`),
-    el('p', 'Bekijk hieronder het verlanglijstje. Dit blijft via je persoonlijke link bereikbaar.')
+    el(
+      'h3',
+      `🎁 Jij koopt voor ${person?.naam || 'onbekend'}!`
+    ),
+    el(
+      'p',
+      'Bekijk hieronder het verlanglijstje. ' +
+      'Dit blijft via je persoonlijke link bereikbaar.'
+    )
   );
 
   target.classList.remove('hidden');
 }
 
-function canReserve(p) {
-  if (!myMember || !myPerson || !p) return false;
-  if (p.id === myPerson.id) return false;
-
-  // Kinderen hebben alleen een verlanglijstje.
-  // Volwassen deelnemers mogen hun cadeaus reserveren.
-  if (p.kind && !myPerson.kind) return true;
-
-  // Voor volwassenen mag alleen de getrokken koper reserveren.
-  return !!mySecret && mySecret.recipientId === p.id;
+function canReserve(person) {
+  // Reserveren kan uitsluitend voor kinderen.
+  return !!myMember && !!person && person.kind === true;
 }
 
 function renderWishlists() {
@@ -691,47 +1045,72 @@ function renderWishlists() {
   function addGroup(title, persons) {
     if (!persons.length) return;
 
-    target.append(el('h3', title));
+    const heading = el('h3', title, 'group-heading');
+    target.append(heading);
 
-    for (const p of persons) {
+    for (const person of persons) {
       const section = el('div', undefined, 'item');
-      section.append(el('h3', p.naam));
+      section.append(el('h3', person.naam));
 
-      const wishes = p.wishes || [];
+      const wishes = person.wishes || [];
 
-      if (!wishes.length)
-        section.append(el('p', 'Nog geen wensen.', 'muted'));
+      if (!wishes.length) {
+        section.append(
+          el('p', 'Nog geen wensen.', 'muted')
+        );
+      }
 
-      for (const w of wishes) {
-        const res = p.id === myPerson.id
-          ? null
-          : reservations.find(x => x.id === w.id);
+      for (const wish of wishes) {
+        const reservation = person.kind
+          ? reservations.find(x =>
+              x.id === wish.id &&
+              x.targetId === person.id
+            )
+          : null;
 
-        const row = el('div', undefined, 'wish');
-        row.style.marginBottom = '10px';
-        row.append(wishContent(w));
+        const row = el('div', undefined, 'wish wish-list-row');
+        row.append(wishContent(wish));
 
-        // De eigenaar ziet nooit de reserveringsstatus.
-        if (p.id !== myPerson.id && res?.reserved) {
-          row.append(el('span', '✓ Gereserveerd', 'pill'));
-        }
-
-        if (canReserve(p)) {
-          const isMine = res?.reserved &&
-            res.actorUid === auth.currentUser.uid;
-
-          const b = el(
-            'button',
-            res?.reserved
-              ? (isMine ? 'Vrijgeven' : 'Al gereserveerd')
-              : 'Reserveren',
-            res?.reserved ? 'secondary smallbtn' : 'smallbtn'
+        if (person.kind) {
+          const controls = el(
+            'div', undefined, 'reservation-controls'
           );
 
-          b.disabled = !!res?.reserved && !isMine;
-          b.onclick = () => reserve(p, w, !res?.reserved);
+          const isReserved =
+            reservation?.reserved === true;
 
-          row.append(b);
+          const isMine =
+            isReserved &&
+            reservation.actorUid === auth.currentUser?.uid;
+
+          if (isReserved) {
+            controls.append(
+              el('span', '✓ Gereserveerd', 'pill')
+            );
+          }
+
+          if (canReserve(person)) {
+            const button = el(
+              'button',
+              isReserved
+                ? (isMine ? 'Vrijgeven' : 'Al gereserveerd')
+                : 'Reserveren',
+              isReserved
+                ? 'secondary smallbtn'
+                : 'smallbtn'
+            );
+
+            button.disabled = isReserved && !isMine;
+
+            if (!button.disabled) {
+              button.onclick = () =>
+                reserve(person, wish, !isReserved);
+            }
+
+            controls.append(button);
+          }
+
+          row.append(controls);
         }
 
         section.append(row);
@@ -742,44 +1121,77 @@ function renderWishlists() {
   }
 
   addGroup('Alle deelnemers', adults);
-  addGroup('Geen deelnemers, wel een verlanglijstje', children);
+
+  addGroup(
+    'Geen deelnemers, wel een verlanglijstje',
+    children
+  );
 }
 
-async function reserve(p, w, value) {
+async function reserve(person, wish, shouldReserve) {
   try {
-    if (!canReserve(p))
-      throw Error('Je mag dit cadeau niet reserveren.');
+    if (!canReserve(person)) {
+      throw Error('Reserveren kan alleen bij kinderen.');
+    }
 
-    const ref = reservationRef(eventId, w.id);
+    const buttonStatus = shouldReserve
+      ? 'Cadeau reserveren…'
+      : 'Reservering vrijgeven…';
 
-    await runTransaction(db, async tx => {
-      const old = await tx.get(ref);
-      const data = old.exists() ? old.data() : null;
+    status(buttonStatus);
 
-      if (value && data?.reserved)
-        throw Error('Dit cadeau is al gereserveerd.');
+    const ref = reservationRef(eventId, wish.id);
 
-      if (!value && (
-        !data?.reserved ||
-        data.actorUid !== auth.currentUser.uid
-      )) throw Error('Alleen de koper kan deze reservering vrijgeven.');
+    await runTransaction(db, async transaction => {
+      const snapshot = await transaction.get(ref);
+      const previous = snapshot.exists()
+        ? snapshot.data()
+        : null;
 
-      if (value) {
-        tx.set(ref, {
-          targetId: p.id,
-          wishId: w.id,
-          reserved: true,
-          actorUid: auth.currentUser.uid
-        });
+      if (shouldReserve) {
+        if (previous?.reserved === true) {
+          throw Error('Dit cadeau is al gereserveerd.');
+        }
+
+        if (snapshot.exists()) {
+          transaction.update(ref, {
+            reserved: true,
+            actorUid: auth.currentUser.uid
+          });
+        } else {
+          transaction.set(ref, {
+            targetId: person.id,
+            wishId: wish.id,
+            reserved: true,
+            actorUid: auth.currentUser.uid
+          });
+        }
       } else {
-        // Alleen de reserveringsstatus wijzigen.
-        tx.update(ref, { reserved: false });
+        if (
+          previous?.reserved !== true ||
+          previous.actorUid !== auth.currentUser.uid
+        ) {
+          throw Error(
+            'Alleen degene die het cadeau reserveerde kan het vrijgeven.'
+          );
+        }
+
+        transaction.update(ref, {
+          reserved: false
+        });
       }
     });
 
     await refreshParticipant();
-    status(value ? 'Cadeau gereserveerd!' : 'Reservering vrijgegeven.');
-  } catch (e) { fail(e); }
+
+    status(
+      shouldReserve
+        ? 'Cadeau gereserveerd!'
+        : 'Reservering vrijgegeven.'
+    );
+  } catch (error) {
+    fail(error);
+  }
 }
 
 loginSetup();
@@ -798,5 +1210,7 @@ onAuthStateChanged(auth, async user => {
       show('home');
       status('Welkom bij Lootjes');
     }
-  } catch (e) { fail(e); }
+  } catch (error) {
+    fail(error);
+  }
 });
