@@ -4,347 +4,452 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#f8f5ef">
+<meta name="theme-color" content="#f7f4eb">
 <title>Lootjes — een beetje magie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Great+Vibes&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
 :root {
-  --bg: #f8f5ef;
-  --ink: #34483e;
-  --muted: #78877b;
-  --line: #e2e5dc;
-  --pink: #f7e8e4;
+  --bg:#f7f4eb;
+  --paper:#fffdf8;
+  --ink:#304b3b;
+  --muted:#7c887c;
+  --line:#e5e5d9;
+  --soft:#edf1e8;
+  --pink:#f8e8e2;
+  --gold:#b59a68;
+  --shadow:0 10px 34px rgba(48,75,59,.075);
 }
-
-* {
-  box-sizing: border-box;
-}
-
+* {box-sizing:border-box}
+html {scroll-behavior:smooth;scroll-padding-top:28px}
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font: 15px/1.55 system-ui, Arial, sans-serif;
+  margin:0;
+  color:var(--ink);
+  background:var(--bg);
+  font:15px/1.65 "DM Sans",sans-serif;
 }
-
+body::before {
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 0% 8%,#dbe5d780,transparent 34%),
+    radial-gradient(ellipse at 100% 36%,#e5e9d980,transparent 30%),
+    radial-gradient(ellipse at 30% 100%,#eae0cf60,transparent 40%);
+}
 main {
-  max-width: 760px;
-  margin: auto;
-  padding: 30px 17px 80px;
+  width:min(100%,1040px);
+  margin:auto;
+  padding:20px 18px 120px;
 }
-
 header {
-  text-align: center;
-  margin: 12px 0 32px;
+  text-align:center;
+  padding:25px 0 30px;
+  position:relative;
 }
-
-h1, h2, h3 {
-  font-family: Georgia, serif;
-  font-weight: 400;
+h1,h2,h3 {
+  font-family:"Playfair Display",Georgia,serif;
+  font-weight:500;
+  line-height:1.3;
 }
-
-h1 {
-  font-size: clamp(42px, 10vw, 64px);
-  margin: 0;
+h1 {font-size:clamp(44px,9vw,70px);margin:0}
+h2 {font-size:clamp(25px,5vw,34px);margin:0 0 14px}
+h3 {font-size:21px;margin:0 0 12px}
+p {margin:10px 0 16px}
+a {color:var(--ink)}
+.muted,.hint {color:var(--muted)}
+.hint {font-size:13px}
+.hidden {display:none!important}
+.brand {
+  font-family:"Great Vibes",cursive;
+  font-size:clamp(60px,11vw,88px);
+  line-height:1.15;
+  color:var(--ink);
 }
-
-h2 {
-  font-size: 30px;
-  margin: 0 0 12px;
+.brand-subtitle {
+  font-family:"Playfair Display",serif;
+  font-size:14px;
+  letter-spacing:.11em;
+  color:var(--muted);
 }
-
-h3 {
-  font-size: 22px;
-  margin: 0 0 10px;
+.flourish {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  margin:15px auto;
+  color:var(--gold);
 }
-
-.muted, .hint {
-  color: var(--muted);
+.flourish::before,.flourish::after {
+  content:"";
+  width:48px;
+  height:1px;
+  background:#cbbd9f;
 }
-
-.hint {
-  font-size: 13px;
-}
-
+.flourish span {font-size:20px}
 .card {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 23px;
-  margin: 16px 0;
-  box-shadow: 0 8px 25px #34483e09;
+  position:relative;
+  background:rgba(255,253,248,.94);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:27px;
+  margin:19px 0;
+  box-shadow:var(--shadow);
 }
-
+.card::before {
+  content:"";
+  position:absolute;
+  top:14px;
+  right:17px;
+  width:38px;
+  height:38px;
+  opacity:.17;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 25%,#64826b 0 28%,transparent 30%),
+    radial-gradient(ellipse at 25% 65%,#64826b 0 24%,transparent 26%),
+    radial-gradient(ellipse at 75% 65%,#64826b 0 24%,transparent 26%);
+  transform:rotate(-25deg);
+}
+.section-heading {
+  text-align:center;
+  margin:10px 0 20px;
+}
+.eyebrow {
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.2em;
+  color:#8b987e;
+}
 label {
-  display: block;
-  font-size: 13px;
-  font-weight: 650;
-  margin: 14px 0 6px;
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin:15px 0 7px;
 }
-
-input, textarea, select {
-  width: 100%;
-  padding: 12px 13px;
-  border: 1px solid #d7ddd3;
-  border-radius: 11px;
-  font: inherit;
-  color: var(--ink);
-  background: #fdfdfa;
+input,textarea,select {
+  width:100%;
+  min-width:0;
+  padding:13px 15px;
+  border:1px solid #d9dfd3;
+  border-radius:12px;
+  color:var(--ink);
+  background:#fffefa;
+  font:inherit;
 }
-
-textarea {
-  min-height: 82px;
+input:focus,textarea:focus,select:focus {
+  outline:2px solid #a7bca9;
+  outline-offset:1px;
 }
-
+textarea {min-height:90px;resize:vertical}
 button {
-  border: 0;
-  border-radius: 12px;
-  padding: 12px 16px;
-  background: var(--ink);
-  color: white;
-  font: 600 14px system-ui;
-  cursor: pointer;
+  border:0;
+  border-radius:13px;
+  padding:13px 18px;
+  background:var(--ink);
+  color:#fff;
+  font:700 14px "DM Sans",sans-serif;
+  cursor:pointer;
+  transition:transform .2s,background .2s;
 }
-
-button.secondary {
-  background: #edf1eb;
-  color: var(--ink);
+button:hover:not(:disabled) {
+  background:#456650;
+  transform:translateY(-1px);
 }
-
-button.warn {
-  background: var(--pink);
-  color: #945f56;
-}
-
-button:disabled {
-  opacity: .45;
-  cursor: not-allowed;
-}
-
-.row {
-  display: flex;
-  gap: 9px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.row > * {
-  flex: 1;
-}
-
-.row button {
-  flex: 0 0 auto;
-}
-
-.stack {
-  display: grid;
-  gap: 10px;
-}
-
-.item {
-  padding: 15px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.item:last-child {
-  border-bottom: 0;
-}
-
+button.secondary {background:var(--soft);color:var(--ink)}
+button.secondary:hover:not(:disabled) {background:#dce7d9}
+button.warn {background:var(--pink);color:#945f56}
+button:disabled {opacity:.45;cursor:not-allowed}
+.row {display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.row>* {flex:1}
+.row button {flex:0 0 auto}
+.stack {display:grid;gap:11px}
+.split {display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wide {width:100%}
+.smallbtn {padding:9px 12px;font-size:12px}
+.section-space {margin-top:30px}
+.item {padding:15px 0;border-bottom:1px solid var(--line)}
+.item:last-child {border-bottom:0}
 .pill {
-  display: inline-block;
-  border-radius: 100px;
-  padding: 4px 10px;
-  background: #edf1eb;
-  font-size: 12px;
-  white-space: nowrap;
+  display:inline-block;
+  padding:5px 12px;
+  border-radius:100px;
+  background:var(--soft);
+  font-size:12px;
 }
-
-.hidden {
-  display: none !important;
-}
-
-.alert {
-  background: #fff1eb;
-  border-radius: 12px;
-  padding: 12px;
-  margin: 12px 0;
-}
-
-.ok {
-  background: #edf5ed;
-  border-radius: 12px;
-  padding: 12px;
-  margin: 12px 0;
-}
-
-.wish {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-
-.wish-content {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  flex: 1;
-}
-
-.wish-content a {
-  display: block;
-  margin-top: 4px;
-  font-size: 13px;
-}
-
-.wish-actions,
-.reservation-controls {
-  display: flex;
-  gap: 7px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.wish-list-row {
-  padding: 9px 0;
-  border-bottom: 1px solid #f1f2ee;
-}
-
-.wish-list-row:last-child {
-  border-bottom: 0;
-}
-
-.group-heading {
-  margin-top: 28px;
-  padding-bottom: 9px;
-  border-bottom: 1px solid var(--line);
-}
-
-.wide {
-  width: 100%;
-}
-
-a {
-  color: var(--ink);
-}
-
+.alert,.ok {padding:15px;border-radius:14px;margin:14px 0}
+.alert {background:#fff1eb}
+.ok {background:#edf5ed}
 .linkbox {
-  overflow-wrap: anywhere;
-  background: #f4f5f0;
-  padding: 10px;
-  border-radius: 9px;
-  font-size: 12px;
+  overflow-wrap:anywhere;
+  background:#f3f5ef;
+  border-radius:10px;
+  padding:12px;
+  font-size:12px;
 }
-
-.smallbtn {
-  padding: 8px 11px;
+.wish {
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  justify-content:space-between;
 }
-
+.wish-content {flex:1;min-width:0;overflow-wrap:anywhere}
+.wish-content strong {font-weight:600}
+.wish-content a {display:block;font-size:13px;margin-top:4px}
+.wish-actions,.reservation-controls {
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  justify-content:flex-end;
+}
+.wish-list-row {padding:12px 0;border-bottom:1px solid var(--line)}
+.wish-list-row:last-child {border:0}
+.group-heading {margin-top:26px;border-bottom:1px solid var(--line);padding-bottom:10px}
 #status {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  text-align: center;
-  background: #f0f3ed;
-  padding: 8px;
-  font-size: 13px;
+  position:relative;
+  z-index:10;
+  text-align:center;
+  padding:8px 15px;
+  background:#eaf0e7;
+  color:var(--ink);
+  font-size:12px;
 }
-
-.split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+#eventIntro {
+  text-align:center;
+  background:linear-gradient(150deg,#fffdf8,#f2f4eb);
 }
-
-.section-space {
-  margin-top: 28px;
+#eventIntro h2 {font-size:clamp(27px,5vw,40px)}
+#eventIntro p {margin:7px 0}
+#myWishes .item {padding:16px 0}
+#revealCard {
+  text-align:center;
+  overflow:hidden;
+  background:linear-gradient(155deg,#fffdf8,#f1f3e9);
+  padding-top:35px;
+  padding-bottom:35px;
 }
-
+#revealCard::after {
+  content:"✦";
+  display:block;
+  color:var(--gold);
+  font-size:24px;
+  margin-top:20px;
+}
+.envelope-art {
+  position:relative;
+  width:min(100%,390px);
+  height:225px;
+  margin:25px auto;
+  filter:drop-shadow(0 14px 13px #4a5b4930);
+}
+.envelope-back {
+  position:absolute;
+  inset:12px 0 0;
+  background:#d7c5a6;
+  border:1px solid #bda98c;
+  border-radius:9px;
+}
+.envelope-letter {
+  position:absolute;
+  top:35px;
+  left:12%;
+  width:76%;
+  height:150px;
+  background:#fffdf4;
+  border:1px solid #e6ddcc;
+  border-radius:6px;
+  display:grid;
+  place-items:center;
+  color:var(--ink);
+  font-family:"Playfair Display",serif;
+  font-size:21px;
+  transition:transform .9s ease;
+}
+.envelope-front {
+  position:absolute;
+  inset:12px 0 0;
+  background:#e8dac2;
+  clip-path:polygon(0 10%,50% 62%,100% 10%,100% 100%,0 100%);
+  border-radius:9px;
+}
+.envelope-flap {
+  position:absolute;
+  inset:12px 0 auto;
+  height:145px;
+  background:#f0e4d0;
+  clip-path:polygon(0 0,100% 0,50% 100%);
+  transform-origin:top center;
+  transition:transform .9s ease;
+  z-index:2;
+}
+.wax-seal {
+  position:absolute;
+  z-index:3;
+  left:50%;
+  top:111px;
+  transform:translate(-50%,-50%);
+  display:grid;
+  place-items:center;
+  width:61px;
+  height:61px;
+  border-radius:46% 54% 51% 49%;
+  color:#e6d7a9;
+  background:radial-gradient(circle at 30% 25%,#607c5c,#304d3b 72%);
+  border:4px double #82987b;
+  box-shadow:0 3px 8px #304b3b55;
+  font-family:Georgia,serif;
+  font-size:27px;
+  transition:opacity .4s;
+}
+.envelope-art.open .envelope-flap {
+  transform:rotateX(180deg);
+  z-index:0;
+}
+.envelope-art.open .envelope-letter {transform:translateY(-45px)}
+.envelope-art.open .wax-seal {opacity:0}
 #revealed {
-  margin-top: 20px;
-  padding: 16px;
-  background: #edf5ed;
-  border-radius: 12px;
+  margin-top:20px;
+  padding:18px;
+  background:#edf3e9;
+  border-radius:16px;
 }
-
-@media (max-width: 500px) {
-  .split {
-    grid-template-columns: 1fr;
-  }
-
-  .card {
-    padding: 18px;
-  }
-
-  .wish {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .wish-actions,
-  .reservation-controls {
-    justify-content: flex-start;
+#revealed h3 {margin-bottom:8px}
+#revealBtn {max-width:330px}
+#participant .card {scroll-margin-top:25px}
+.bottom-nav {
+  position:fixed;
+  z-index:20;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(calc(100% - 28px),500px);
+  display:none;
+  grid-template-columns:repeat(3,1fr);
+  background:#fffdf8f5;
+  border:1px solid var(--line);
+  border-radius:22px;
+  box-shadow:0 9px 35px #304b3b25;
+  padding:8px;
+  backdrop-filter:blur(12px);
+}
+.bottom-nav a {
+  text-decoration:none;
+  text-align:center;
+  color:var(--ink);
+  font-size:11px;
+  font-weight:700;
+  padding:8px 4px;
+  border-radius:14px;
+}
+.bottom-nav a:hover {background:var(--soft)}
+.nav-icon {display:block;font-size:21px;line-height:1.5}
+.desktop-nav {
+  display:none;
+  justify-content:center;
+  gap:12px;
+  margin:10px 0 25px;
+}
+.desktop-nav a {
+  padding:10px 19px;
+  border-radius:30px;
+  background:#fffdf8;
+  border:1px solid var(--line);
+  color:var(--ink);
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+}
+.desktop-nav a:hover {background:var(--soft)}
+#admin .card {max-width:850px;margin:20px auto}
+#admin .stack>button {text-align:left}
+#home,#login {max-width:540px;margin:30px auto}
+#home {text-align:center}
+#manageDetails {color:var(--muted)}
+@media(min-width:701px) {
+  body:has(#participant:not(.hidden)) .desktop-nav {display:flex}
+  #participant {max-width:800px;margin:auto}
+}
+@media(max-width:700px) {
+  main {padding:12px 15px 120px}
+  .card {padding:21px 18px;border-radius:20px}
+  .split {grid-template-columns:1fr}
+  .wish {flex-direction:column;align-items:stretch}
+  .wish-actions,.reservation-controls {justify-content:flex-start}
+  body:has(#participant:not(.hidden)) .bottom-nav {display:grid}
+  .envelope-art {height:205px}
+  .envelope-back,.envelope-front,.envelope-flap {top:8px}
+}
+@media(prefers-reduced-motion:reduce) {
+  *,*::before,*::after {
+    scroll-behavior:auto!important;
+    transition:none!important;
+    animation:none!important;
   }
 }
 </style>
 </head>
-
 <body>
 
-<div id="status">Lootjes wordt geladen…</div>
+<div id="status" role="status" aria-live="polite">Lootjes wordt geladen…</div>
 
 <main>
-
 <header>
-  <h1>✉️ Lootjes</h1>
-  <div class="muted">Een beetje magie, een mooi cadeau.</div>
+  <div class="brand">Lootjes</div>
+  <div class="flourish"><span>❧</span></div>
+  <div class="brand-subtitle">Een beetje magie, een mooi cadeau</div>
 </header>
+
+<nav class="desktop-nav" aria-label="Navigatie deelnemers">
+  <a href="#wishlistSection">Mijn lijstje</a>
+  <a href="#revealCard">Mijn lootje</a>
+  <a href="#eventIntro">Details</a>
+</nav>
 
 <section id="home" class="card hidden">
   <h2>Welkom bij Lootjes</h2>
-  <p>
-    Open je persoonlijke link om mee te doen,
-    of log in als organisator.
-  </p>
+  <p>Een bijzondere verrassing begint met een persoonlijk lootje.</p>
+  <p class="muted">Open je persoonlijke link om mee te doen.</p>
   <button id="showLogin">Organisator inloggen</button>
 </section>
 
 <section id="login" class="card hidden">
   <h2>Organisator</h2>
-
   <label for="email">E-mailadres</label>
   <input id="email" type="email" autocomplete="username">
-
   <label for="password">Wachtwoord</label>
   <input id="password" type="password" autocomplete="current-password">
-
-  <p>
+  <p class="row">
     <button id="loginBtn">Inloggen</button>
     <button class="secondary" id="backHome">Terug</button>
   </p>
 </section>
 
 <section id="admin" class="hidden">
-
   <div class="row">
-    <h2>Mijn trekkingen</h2>
+    <h2>Mijn vieringen</h2>
     <button class="secondary" id="logout">Uitloggen</button>
   </div>
-
   <div id="events" class="stack"></div>
 
   <section class="card">
-    <h2>Nieuwe trekking</h2>
+    <div class="section-heading">
+      <div class="eyebrow">Een nieuwe gelegenheid</div>
+      <h2>Nieuwe viering</h2>
+    </div>
 
     <label for="eventName">Naam van de viering</label>
-    <input id="eventName" placeholder="Kerst 2026">
+    <input id="eventName" placeholder="Bijvoorbeeld: Familiefeest 2027">
 
     <div class="split">
       <div>
         <label for="eventDate">Datum</label>
         <input id="eventDate" type="date">
       </div>
-
       <div>
         <label for="eventTime">Tijd</label>
         <input id="eventTime" type="time">
@@ -352,63 +457,34 @@ a {
     </div>
 
     <label for="eventLocation">Locatie</label>
-    <input
-      id="eventLocation"
-      placeholder="Bijvoorbeeld: Bij opa en oma"
-    >
+    <input id="eventLocation" placeholder="Waar komen jullie samen?">
 
-    <label for="eventBudget">Budget (€)</label>
-    <input
-      id="eventBudget"
-      type="number"
-      min="0"
-      step="0.01"
-    >
+    <label for="eventBudget">Cadeaubudget (€)</label>
+    <input id="eventBudget" type="number" min="0" step="0.01">
 
     <label for="eventInfo">Extra informatie</label>
-    <textarea
-      id="eventInfo"
-      placeholder="Bijvoorbeeld: Neem iets lekkers mee."
-    ></textarea>
+    <textarea id="eventInfo" placeholder="Bijzonderheden voor de deelnemers"></textarea>
 
-    <label for="adultNames">
-      Deelnemers aan de trekking (één naam per regel)
-    </label>
-    <textarea
-      id="adultNames"
-      placeholder="Eén deelnemer per regel"
-    ></textarea>
+    <label for="eventDeadline">Deadline verlanglijstjes</label>
+    <input id="eventDeadline" type="date">
 
-    <label for="childNames">
-      Kinderen / alleen verlanglijstje (één per regel)
-    </label>
-    <textarea
-      id="childNames"
-      placeholder="Eén kind per regel"
-    ></textarea>
+    <label for="adultNames">Deelnemers (één naam per regel)</label>
+    <textarea id="adultNames" placeholder="Dominique&#10;Richard&#10;Sophie"></textarea>
 
-    <p class="hint">
-      Voor iedereen wordt een persoonlijke link gemaakt.
-      Kinderen trekken geen lootje.
-    </p>
+    <p class="hint">Iedere deelnemer krijgt een unieke persoonlijke link.</p>
+    <button id="createEvent" class="wide">Viering aanmaken</button>
 
-    <button id="createEvent" class="wide">
-      Trekking aanmaken
-    </button>
+    <!-- Tijdelijk aanwezig voor compatibiliteit met de oude app.js. -->
+    <textarea id="childNames" class="hidden" aria-hidden="true"></textarea>
   </section>
 
   <section id="manage" class="card hidden">
-
     <h2 id="manageTitle"></h2>
     <div id="manageDetails"></div>
 
     <div class="section-space">
       <h3>Vieringsinformatie aanpassen</h3>
-
-      <p class="hint">
-        Je kunt deze gegevens ook na de definitieve trekking
-        nog wijzigen. De getrokken lootjes blijven hetzelfde.
-      </p>
+      <p class="hint">Deze gegevens kun je ook na de definitieve trekking wijzigen.</p>
 
       <label for="editEventName">Naam van de viering</label>
       <input id="editEventName">
@@ -418,7 +494,6 @@ a {
           <label for="editEventDate">Datum</label>
           <input id="editEventDate" type="date">
         </div>
-
         <div>
           <label for="editEventTime">Tijd</label>
           <input id="editEventTime" type="time">
@@ -426,165 +501,123 @@ a {
       </div>
 
       <label for="editEventLocation">Locatie</label>
-      <input
-        id="editEventLocation"
-        placeholder="Bijvoorbeeld: Bij opa en oma"
-      >
+      <input id="editEventLocation">
 
-      <label for="editEventBudget">Budget (€)</label>
-      <input
-        id="editEventBudget"
-        type="number"
-        min="0"
-        step="0.01"
-      >
+      <label for="editEventBudget">Cadeaubudget (€)</label>
+      <input id="editEventBudget" type="number" min="0" step="0.01">
 
       <label for="editEventInfo">Extra informatie</label>
       <textarea id="editEventInfo"></textarea>
 
-      <p>
-        <button id="saveEventDetails" class="wide">
-          Vieringsinformatie opslaan
-        </button>
-      </p>
+      <label for="editEventDeadline">Deadline verlanglijstjes</label>
+      <input id="editEventDeadline" type="date">
+
+      <button id="saveEventDetails" class="wide">Gegevens opslaan</button>
+    </div>
+
+    <div class="section-space">
+      <h3>Deelnemers</h3>
+      <div id="adminParticipants"></div>
+      <div id="participantManagement"></div>
     </div>
 
     <div class="section-space">
       <h3>Uitsluitingen</h3>
-
-      <p class="hint">
-        Vink aan wie een ander niet mag trekken.
-        Dit werkt per richting.
-      </p>
-
+      <p class="hint">Stel per deelnemer in wie diegene niet mag trekken.</p>
       <div id="exclusions"></div>
-
-      <button
-        id="saveExclusions"
-        class="secondary wide"
-      >
-        Uitsluitingen opslaan
-      </button>
+      <button id="saveExclusions" class="secondary wide">Uitsluitingen opslaan</button>
     </div>
 
     <div class="alert">
-      <strong>Definitieve trekking</strong>
+      <h3>Definitieve trekking</h3>
+      <p>Controleer eerst de deelnemers en uitsluitingen. De verdeling wordt daarna definitief.</p>
+      <button id="drawBtn" class="wide">Trekking definitief uitvoeren</button>
+    </div>
 
-      <p>
-        Controleer eerst alle deelnemers en uitsluitingen.
-        Na bevestiging kunnen de resultaten niet meer
-        worden gewijzigd.
-      </p>
-
-      <button id="drawBtn" class="wide">
-        Trekking definitief uitvoeren
-      </button>
+    <div class="section-space">
+      <h3>Trekkingsresultaten</h3>
+      <button id="showDrawResults" class="secondary wide">Bekijk trekkingsresultaten</button>
+      <div id="drawResults" class="hidden"></div>
     </div>
 
     <div class="section-space">
       <h3>Persoonlijke links</h3>
-
       <div id="links"></div>
-
-      <p class="hint">
-        Deel elke link alleen met de betreffende persoon.
-        Voor een kind kun je de link aan de verzorger sturen.
-      </p>
+      <p class="hint">Deel iedere link alleen met de betreffende deelnemer.</p>
     </div>
 
+    <div class="section-space">
+      <button id="deleteEvent" class="warn wide">Deze viering verwijderen</button>
+    </div>
   </section>
 </section>
 
 <section id="participant" class="hidden">
+  <section id="eventIntro" class="card"></section>
 
-  <div id="eventIntro" class="card"></div>
-
-  <section class="card">
-
-    <h2>Mijn verlanglijstje</h2>
+  <section id="wishlistSection" class="card">
+    <div class="section-heading">
+      <div class="eyebrow">Met liefde uitgezocht</div>
+      <h2>Mijn verlanglijstje</h2>
+    </div>
 
     <p id="wishHint" class="hint">
-      Je kunt wensen toevoegen, wijzigen en verwijderen.
+      Voeg minimaal drie wensen toe om je lootje te kunnen openen.
     </p>
 
     <div id="myWishes"></div>
 
-    <label for="newWish">
-      Cadeauomschrijving (verplicht)
-    </label>
+    <div id="wishEditor">
+      <label for="newWish">Wat staat er op jouw verlanglijstje?</label>
+      <input id="newWish" maxlength="160" placeholder="Bijvoorbeeld: Een mooi boek">
 
-    <input
-      id="newWish"
-      maxlength="160"
-      placeholder="Bijvoorbeeld: Boek - De zeven zussen"
-    >
+      <label for="newWishUrl">Productlink (optioneel)</label>
+      <input id="newWishUrl" type="url" placeholder="https://">
 
-    <label for="newWishUrl">
-      Productlink (optioneel)
-    </label>
-
-    <input
-      id="newWishUrl"
-      type="url"
-      placeholder="https://www.voorbeeld.nl/cadeau"
-    >
-
-    <p>
-      <button id="addWish" class="wide">
-        Wens toevoegen
-      </button>
-    </p>
-
+      <p>
+        <button id="addWish" class="wide">＋ Wens toevoegen</button>
+      </p>
+    </div>
   </section>
 
   <section id="revealCard" class="card">
+    <div class="eyebrow">Een geheimpje speciaal voor jou</div>
+    <h2>Mijn lootje</h2>
+    <p id="revealText">Jouw verrassing wacht op je…</p>
 
-    <h2>✉️ Jouw lootje</h2>
+    <div id="envelopeArt" class="envelope-art" aria-hidden="true">
+      <div class="envelope-back"></div>
+      <div class="envelope-letter">Een beetje magie</div>
+      <div class="envelope-front"></div>
+      <div class="envelope-flap"></div>
+      <div class="wax-seal">✦</div>
+    </div>
 
-    <p id="revealText"></p>
-
-    <button id="revealBtn" class="wide">
-      Open mijn lootje
-    </button>
-
+    <button id="revealBtn" class="wide">Open mijn lootje</button>
     <div id="revealed" class="hidden"></div>
-
   </section>
 
-  <section class="card">
-
-    <h2>Alle verlanglijstjes</h2>
-
-    <p class="hint">
-      Bij de kinderen kun je cadeaus reserveren.
-      Zo voorkomen we dubbele cadeaus.
-      Bij volwassenen is reserveren niet nodig.
-    </p>
-
-    <p>
-      <button
-        id="refreshLists"
-        class="secondary wide"
-      >
-        Verlanglijstjes vernieuwen
-      </button>
-    </p>
-
+  <section id="recipientSection" class="card hidden">
+    <div class="section-heading">
+      <div class="eyebrow">Voor jouw geheime persoon</div>
+      <h2>Het verlanglijstje</h2>
+    </div>
+    <button id="refreshLists" class="secondary wide">Verlanglijstje vernieuwen</button>
     <div id="allWishlists"></div>
-
   </section>
 
   <p class="hint">
-    🔒 Dit is jouw persoonlijke link.
-    Deel hem niet: wie deze link heeft,
-    kan jouw Lootjes-pagina openen.
+    🔒 Dit is jouw persoonlijke link. Deel hem niet met anderen.
   </p>
-
 </section>
-
 </main>
 
-<script type="module" src="./app.js?v=20261113-2"></script>
+<nav class="bottom-nav" aria-label="Navigatie deelnemers">
+  <a href="#wishlistSection"><span class="nav-icon">♡</span>Mijn lijstje</a>
+  <a href="#revealCard"><span class="nav-icon">✉</span>Mijn lootje</a>
+  <a href="#eventIntro"><span class="nav-icon">⌂</span>Details</a>
+</nav>
 
+<script type="module" src="./app.js?v=20261113-2"></script>
 </body>
 </html>
