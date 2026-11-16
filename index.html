@@ -209,7 +209,11 @@ button:disabled {opacity:.45;cursor:not-allowed}
 }
 .wish-list-row {padding:12px 0;border-bottom:1px solid var(--line)}
 .wish-list-row:last-child {border:0}
-.group-heading {margin-top:26px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.group-heading {
+  margin-top:26px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:10px;
+}
 #status {
   position:relative;
   z-index:10;
@@ -370,6 +374,59 @@ button:disabled {opacity:.45;cursor:not-allowed}
 #home,#login {max-width:540px;margin:30px auto}
 #home {text-align:center}
 #manageDetails {color:var(--muted)}
+
+/* Verwijdervenster */
+.delete-overlay {
+  position:fixed;
+  inset:0;
+  z-index:1000;
+  background:rgba(25,43,32,.68);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.delete-dialog {
+  width:min(100%,460px);
+  max-height:calc(100vh - 40px);
+  overflow-y:auto;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:28px;
+  box-shadow:0 25px 80px #10251b55;
+}
+.delete-dialog h2 {
+  font-size:27px;
+  color:#854b44;
+}
+.delete-dialog p {font-size:14px}
+.delete-dialog .danger-text {
+  color:#944a46;
+  font-weight:700;
+}
+.delete-dialog .dialog-actions {
+  display:grid;
+  gap:10px;
+  margin-top:22px;
+}
+.delete-dialog .delete-confirm {
+  background:#944a46;
+  color:white;
+}
+.delete-dialog .delete-confirm:hover:not(:disabled) {
+  background:#7e3934;
+}
+.delete-dialog .delete-error {
+  color:#944a46;
+  background:#fbe8e4;
+  padding:12px;
+  border-radius:12px;
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
+body.delete-open {overflow:hidden}
+
 @media(min-width:701px) {
   body:has(#participant:not(.hidden)) .desktop-nav {display:flex}
   #participant {max-width:800px;margin:auto}
@@ -383,6 +440,7 @@ button:disabled {opacity:.45;cursor:not-allowed}
   body:has(#participant:not(.hidden)) .bottom-nav {display:grid}
   .envelope-art {height:205px}
   .envelope-back,.envelope-front,.envelope-flap {top:8px}
+  .delete-dialog {padding:23px}
 }
 @media(prefers-reduced-motion:reduce) {
   *,*::before,*::after {
@@ -395,7 +453,9 @@ button:disabled {opacity:.45;cursor:not-allowed}
 </head>
 <body>
 
-<div id="status" role="status" aria-live="polite">Lootjes wordt geladen…</div>
+<div id="status" role="status" aria-live="polite">
+  Lootjes wordt geladen…
+</div>
 
 <main>
 <header>
@@ -474,7 +534,6 @@ button:disabled {opacity:.45;cursor:not-allowed}
     <p class="hint">Iedere deelnemer krijgt een unieke persoonlijke link.</p>
     <button id="createEvent" class="wide">Viering aanmaken</button>
 
-    <!-- Tijdelijk aanwezig voor compatibiliteit met de oude app.js. -->
     <textarea id="childNames" class="hidden" aria-hidden="true"></textarea>
   </section>
 
@@ -512,7 +571,9 @@ button:disabled {opacity:.45;cursor:not-allowed}
       <label for="editEventDeadline">Deadline verlanglijstjes</label>
       <input id="editEventDeadline" type="date">
 
-      <button id="saveEventDetails" class="wide">Gegevens opslaan</button>
+      <button id="saveEventDetails" class="wide">
+        Gegevens opslaan
+      </button>
     </div>
 
     <div class="section-space">
@@ -523,31 +584,46 @@ button:disabled {opacity:.45;cursor:not-allowed}
 
     <div class="section-space">
       <h3>Uitsluitingen</h3>
-      <p class="hint">Stel per deelnemer in wie diegene niet mag trekken.</p>
+      <p class="hint">
+        Stel per deelnemer in wie diegene niet mag trekken.
+      </p>
       <div id="exclusions"></div>
-      <button id="saveExclusions" class="secondary wide">Uitsluitingen opslaan</button>
+      <button id="saveExclusions" class="secondary wide">
+        Uitsluitingen opslaan
+      </button>
     </div>
 
     <div class="alert">
       <h3>Definitieve trekking</h3>
-      <p>Controleer eerst de deelnemers en uitsluitingen. De verdeling wordt daarna definitief.</p>
-      <button id="drawBtn" class="wide">Trekking definitief uitvoeren</button>
+      <p>
+        Controleer eerst de deelnemers en uitsluitingen.
+        De verdeling wordt daarna definitief.
+      </p>
+      <button id="drawBtn" class="wide">
+        Trekking definitief uitvoeren
+      </button>
     </div>
 
     <div class="section-space">
       <h3>Trekkingsresultaten</h3>
-      <button id="showDrawResults" class="secondary wide">Bekijk trekkingsresultaten</button>
+      <button id="showDrawResults" class="secondary wide">
+        Bekijk trekkingsresultaten
+      </button>
       <div id="drawResults" class="hidden"></div>
     </div>
 
     <div class="section-space">
       <h3>Persoonlijke links</h3>
       <div id="links"></div>
-      <p class="hint">Deel iedere link alleen met de betreffende deelnemer.</p>
+      <p class="hint">
+        Deel iedere link alleen met de betreffende deelnemer.
+      </p>
     </div>
 
     <div class="section-space">
-      <button id="deleteEvent" class="warn wide">Deze viering verwijderen</button>
+      <button id="deleteEvent" class="warn wide">
+        Deze viering verwijderen
+      </button>
     </div>
   </section>
 </section>
@@ -568,14 +644,19 @@ button:disabled {opacity:.45;cursor:not-allowed}
     <div id="myWishes"></div>
 
     <div id="wishEditor">
-      <label for="newWish">Wat staat er op jouw verlanglijstje?</label>
-      <input id="newWish" maxlength="160" placeholder="Bijvoorbeeld: Een mooi boek">
+      <label for="newWish">
+        Wat staat er op jouw verlanglijstje?
+      </label>
+      <input id="newWish" maxlength="160"
+        placeholder="Bijvoorbeeld: Een mooi boek">
 
       <label for="newWishUrl">Productlink (optioneel)</label>
       <input id="newWishUrl" type="url" placeholder="https://">
 
       <p>
-        <button id="addWish" class="wide">＋ Wens toevoegen</button>
+        <button id="addWish" class="wide">
+          ＋ Wens toevoegen
+        </button>
       </p>
     </div>
   </section>
@@ -602,7 +683,9 @@ button:disabled {opacity:.45;cursor:not-allowed}
       <div class="eyebrow">Voor jouw geheime persoon</div>
       <h2>Het verlanglijstje</h2>
     </div>
-    <button id="refreshLists" class="secondary wide">Verlanglijstje vernieuwen</button>
+    <button id="refreshLists" class="secondary wide">
+      Verlanglijstje vernieuwen
+    </button>
     <div id="allWishlists"></div>
   </section>
 
@@ -613,11 +696,298 @@ button:disabled {opacity:.45;cursor:not-allowed}
 </main>
 
 <nav class="bottom-nav" aria-label="Navigatie deelnemers">
-  <a href="#wishlistSection"><span class="nav-icon">♡</span>Mijn lijstje</a>
-  <a href="#revealCard"><span class="nav-icon">✉</span>Mijn lootje</a>
-  <a href="#eventIntro"><span class="nav-icon">⌂</span>Details</a>
+  <a href="#wishlistSection">
+    <span class="nav-icon">♡</span>Mijn lijstje
+  </a>
+  <a href="#revealCard">
+    <span class="nav-icon">✉</span>Mijn lootje
+  </a>
+  <a href="#eventIntro">
+    <span class="nav-icon">⌂</span>Details
+  </a>
 </nav>
 
+<!-- Verwijderbevestiging binnen de website -->
+<div id="deleteOverlay"
+  class="delete-overlay hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="deleteHeading">
+
+  <div class="delete-dialog">
+    <div class="eyebrow">Beheerdersomgeving</div>
+    <h2 id="deleteHeading">Viering verwijderen?</h2>
+
+    <p>
+      Je staat op het punt om
+      <strong id="deleteEventName"></strong>
+      definitief te verwijderen.
+    </p>
+
+    <p class="danger-text">
+      Alle deelnemers, persoonlijke links,
+      verlanglijstjes en trekkingsresultaten
+      worden verwijderd. Dit kun je niet ongedaan maken.
+    </p>
+
+    <label for="deleteConfirmation">
+      Typ VERWIJDER om te bevestigen
+    </label>
+    <input
+      id="deleteConfirmation"
+      type="text"
+      autocomplete="off"
+      placeholder="VERWIJDER">
+
+    <div id="deleteError"
+      class="delete-error hidden"
+      role="alert"></div>
+
+    <div class="dialog-actions">
+      <button id="confirmDelete"
+        class="delete-confirm"
+        disabled>
+        Definitief verwijderen
+      </button>
+
+      <button id="cancelDelete" class="secondary">
+        Annuleren
+      </button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="./app.js?v=20261113-2"></script>
+
+<!-- Aanvullende verwijderfunctie:
+     app.js blijft volledig ongewijzigd. -->
+<script type="module">
+import {getApp} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
+
+import {getAuth} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
+
+import {
+  getFirestore,
+  doc,
+  collection,
+  getDoc,
+  getDocs,
+  writeBatch,
+  deleteDoc
+} from
+'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+
+const ADMIN_UID='syp8cPy6njSgtsqLxNSX4nIL5I13';
+
+const $=id=>document.getElementById(id);
+
+const overlay=$('deleteOverlay');
+const confirmation=$('deleteConfirmation');
+const confirmButton=$('confirmDelete');
+const cancelButton=$('cancelDelete');
+const errorBox=$('deleteError');
+
+let deleting=false;
+let deletionEventId=null;
+
+function showDeleteError(message){
+  errorBox.textContent=message;
+  errorBox.classList.remove('hidden');
+}
+
+function closeDeleteDialog(){
+  if(deleting)return;
+
+  overlay.classList.add('hidden');
+  document.body.classList.remove('delete-open');
+  confirmation.value='';
+  confirmButton.disabled=true;
+  errorBox.classList.add('hidden');
+  deletionEventId=null;
+}
+
+function findSelectedEventId(){
+  const links=document.querySelectorAll('#links .linkbox');
+
+  for(const link of links){
+    try{
+      const url=new URL(link.textContent.trim());
+      const id=url.searchParams.get('e');
+
+      if(id)return id;
+    }catch{}
+  }
+
+  return null;
+}
+
+function openDeleteDialog(){
+  const manage=$('manage');
+
+  if(manage.classList.contains('hidden')){
+    return;
+  }
+
+  deletionEventId=findSelectedEventId();
+
+  if(!deletionEventId){
+    $('status').textContent=
+      'Kan de geselecteerde viering niet bepalen. Open de viering opnieuw.';
+    return;
+  }
+
+  const name=$('manageTitle').textContent.trim();
+
+  $('deleteEventName').textContent=name;
+  confirmation.value='';
+  confirmButton.disabled=true;
+  confirmButton.textContent='Definitief verwijderen';
+  errorBox.classList.add('hidden');
+
+  overlay.classList.remove('hidden');
+  document.body.classList.add('delete-open');
+
+  confirmation.focus();
+}
+
+confirmation.addEventListener('input',()=>{
+  confirmButton.disabled=
+    deleting||confirmation.value.trim()!=='VERWIJDER';
+});
+
+cancelButton.addEventListener('click',closeDeleteDialog);
+
+overlay.addEventListener('click',event=>{
+  if(event.target===overlay){
+    closeDeleteDialog();
+  }
+});
+
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'
+    &&!overlay.classList.contains('hidden')){
+    closeDeleteDialog();
+  }
+});
+
+// Deze listener vangt de klik af vóór de oude
+// confirm()/prompt()-functie in app.js.
+$('deleteEvent').addEventListener('click',event=>{
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  openDeleteDialog();
+},true);
+
+async function deleteCollection(db,eventId,collectionName){
+  const snapshot=await getDocs(
+    collection(db,'trekkingen',eventId,collectionName)
+  );
+
+  for(let index=0;index<snapshot.docs.length;index+=200){
+    const batch=writeBatch(db);
+
+    for(const item of snapshot.docs.slice(index,index+200)){
+      batch.delete(item.ref);
+    }
+
+    await batch.commit();
+  }
+}
+
+confirmButton.addEventListener('click',async()=>{
+  if(deleting)return;
+  if(confirmation.value.trim()!=='VERWIJDER')return;
+
+  deleting=true;
+  confirmButton.disabled=true;
+  cancelButton.disabled=true;
+  confirmation.disabled=true;
+  confirmButton.textContent='Bezig met verwijderen…';
+  errorBox.classList.add('hidden');
+
+  try{
+    const app=getApp();
+    const auth=getAuth(app);
+    const db=getFirestore(app);
+
+    if(auth.currentUser?.uid!==ADMIN_UID){
+      throw new Error('Je bent niet ingelogd als organisator.');
+    }
+
+    if(!deletionEventId){
+      throw new Error('Geen viering geselecteerd.');
+    }
+
+    const eventReference=doc(
+      db,'trekkingen',deletionEventId
+    );
+
+    const eventSnapshot=await getDoc(eventReference);
+
+    if(!eventSnapshot.exists()){
+      throw new Error('Deze viering bestaat niet meer.');
+    }
+
+    if(eventSnapshot.data().owner!==ADMIN_UID){
+      throw new Error('Je hebt geen toegang tot deze viering.');
+    }
+
+    const subcollections=[
+      'personen',
+      'sleutels',
+      'leden',
+      'geheimen',
+      'instellingen',
+      'reserveringen',
+      'reserveringslog'
+    ];
+
+    // Eerst alle onderliggende gegevens verwijderen.
+    for(const name of subcollections){
+      confirmButton.textContent=
+        'Verwijderen: '+name+'…';
+
+      await deleteCollection(
+        db,
+        deletionEventId,
+        name
+      );
+    }
+
+    // Pas als alle onderliggende gegevens weg zijn,
+    // verwijderen we de viering zelf.
+    confirmButton.textContent='Viering afronden…';
+
+    await deleteDoc(eventReference);
+
+    // Terug naar het beheerdersoverzicht.
+    location.href=location.origin+location.pathname;
+
+  }catch(error){
+    console.error('Verwijderen mislukt:',error);
+
+    showDeleteError(
+      'Verwijderen is niet volledig gelukt: '+
+      (error.message||String(error))+
+      '. Probeer opnieuw. Eerder verwijderde gegevens '+
+      'kunnen al weg zijn.'
+    );
+
+    $('status').textContent=
+      'Het verwijderen is niet volledig gelukt.';
+
+  }finally{
+    deleting=false;
+    confirmation.disabled=false;
+    cancelButton.disabled=false;
+    confirmButton.textContent='Definitief verwijderen';
+    confirmButton.disabled=
+      confirmation.value.trim()!=='VERWIJDER';
+  }
+});
+</script>
+
 </body>
 </html>
